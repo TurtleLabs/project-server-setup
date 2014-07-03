@@ -101,15 +101,15 @@
     "name": "docker",
     "type": "docker",
     "image": "ubuntu",
-    "export_path": "builds/{{user `build_name`}}/{{user `build_name`}}-docker.tar"
+    "export_path": "builds/{{user `build_name`}}-docker.tar"
   }],
   "post-processors": [{
-    "output": "builds/{{user `build_name`}}/{{user `build_name`}}-virtualbox.box",
+    "output": "builds/{{user `build_name`}}-virtualbox.box",
     "type": "vagrant",
     "keep_input_artifact": true,
     "only": ["virtualbox"]
   },{
-    "output": "builds/{{user `build_name`}}/{{user `build_name`}}-aws.box",
+    "output": "builds/{{user `build_name`}}-aws.box",
     "type": "vagrant",
     "keep_input_artifact": true,
     "only": ["aws"]
