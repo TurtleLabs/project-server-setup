@@ -1,0 +1,117 @@
+{
+  "variables": {
+    "build_name": "service-name",
+    "iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04-server-amd64.iso",
+    "aws_source_ami": "ami-c8cf3ba0",
+    "aws_access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+    "aws_secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+    "aws_account_id": "884882099534",
+    "aws_region": "us-east-1",
+    "aws_instance_type": "c3.large",
+    "aws_s3_bucket": "devops.cloudspace.com",
+    "aws_security_group": "default",
+    "username": "vagrant",
+    "password": "vagrant"
+  },
+  "provisioners": [{
+    "type": "shell",
+    "scripts": [
+      "packer-shell-scripts/sudoers-nopasswd.sh",
+      "packer-shell-scripts/install-virtualbox-guest-additions.sh",
+      "packer-shell-scripts/add-vagrant-key.sh"
+    ],
+    "only": ["virtualbox"],
+    "pause_before": "4s"
+  },{
+    "type": "shell",
+    "scripts": [
+      "packer-shell-scripts/base.sh",
+      "packer-shell-scripts/node.sh",
+      "packer-shell-scripts/ruby.sh",
+      "packer-shell-scripts/imagemagick.sh",
+      "packer-shell-scripts/memcached.sh",
+      "packer-shell-scripts/nginx.sh",
+      "packer-shell-scripts/mysql-server.sh",
+      "packer-shell-scripts/redis.sh"
+    ],
+    "pause_before": "4s"
+  },{
+    "type": "shell",
+    "inline": ["sudo apt-get install -y xvfb libqtwebkit-dev libevent-pthreads-2.0-5 libstdc++6"]
+  }],
+  "builders": [{
+    "name": "aws",
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "{{user `aws_region`}}",
+    "source_ami": "{{user `aws_source_ami`}}",
+    "instance_type": "{{user `aws_instance_type`}}",
+    "ssh_username": "ubuntu",
+    "ami_name": "{{user `build_name`}}-{{timestamp}}",
+    "ami_groups": ["all"],
+    "security_group_id": "{{user `aws_security_group`}}",
+    "tags": {
+      "Name": "packer",
+      "Name": "{{user `build_name`}}"
+    },
+    "user_data": ""
+  },{
+    "name": "virtualbox",
+    "type": "virtualbox-iso",
+    "vm_name": "{{user `build_name`}}",
+    "output_directory": "builds/{{user `build_name`}}",
+    "iso_url": "{{user `iso_url`}}",
+    "iso_checksum": "01545fa976c8367b4f0d59169ac4866c",
+    "iso_checksum_type": "md5",
+    "ssh_username": "{{user `username`}}",
+    "ssh_password": "{{user `password`}}",
+    "guest_os_type": "Ubuntu_64",
+    "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+    "virtualbox_version_file": ".vbox_version",
+    "vboxmanage_post": [
+      [
+        "modifyvm",
+        "{{.Name}}",
+        "--memory",
+        "2048"
+      ],
+      [
+        "modifyvm",
+        "{{.Name}}",
+        "--cpus",
+        "2"
+      ]
+    ],
+    "http_directory": "http",
+    "ssh_wait_timeout": "45m",
+    "boot_command": [
+      "<esc><esc><enter><wait>",
+      "/install/vmlinuz noapic ",
+      "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+      "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+      "hostname={{user `build_name`}} ",
+      "fb=false debconf/frontend=noninteractive ",
+      "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+      "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+      "initrd=/install/initrd.gz -- <enter>"
+    ],
+    "shutdown_command": "sudo shutdown -P now"
+  },{
+    "name": "docker",
+    "type": "docker",
+    "image": "ubuntu",
+    "export_path": "builds/{{user `build_name`}}/{{user `build_name`}}-docker.tar"
+  }],
+  "post-processors": [{
+    "output": "builds/{{user `build_name`}}/{{user `build_name`}}-virtualbox.box",
+    "type": "vagrant",
+    "keep_input_artifact": true,
+    "only": ["virtualbox"]
+  },{
+    "output": "builds/{{user `build_name`}}/{{user `build_name`}}-aws.box",
+    "type": "vagrant",
+    "keep_input_artifact": true,
+    "only": ["aws"]
+  }]
+}

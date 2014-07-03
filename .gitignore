@@ -1,0 +1,9 @@
+# OS X
+.DS_Store
+
+# Vagrant
+.vagrant
+
+# Packer builds
+/devops/builds/*
+devops/packer_cache
