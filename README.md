@@ -3,9 +3,42 @@ project-server-setup
 
 Configuration for setting up development and cloud servers for a new internal or client project at Cloudspace.  The repo also contains initial Capistrano deploy setups and a dev environment Vagrantfile you can use as a starting point.
 
-# Basic config
 
-Copy these files and directory into the root of your project and customize as needed.
+## Default Builds
+
+For most projects you can use a default build and then customize as needed.  Here are links to download default Vagrant (.box files), Virtualbox (.ovf & .vmdk), and aws (ami listed in .txt file)
+
+- Ubuntu: http://devops.cloudspace.com/images/?prefix=images/ubuntu/
+- Ubuntu + MySQL: http://devops.cloudspace.com/images/?prefix=images/mysql/
+- Ubuntu + NodeJS: http://devops.cloudspace.com/images/?prefix=images/node/
+- Ubuntu + PostgreSQL: http://devops.cloudspace.com/images/?prefix=images/postgresql/
+- Ubuntu + Ruby: http://devops.cloudspace.com/images/?prefix=images/ruby/
+- Ubuntu + Ruby + MySQL: http://devops.cloudspace.com/images/?prefix=images/ruby-mysql/
+- Ubuntu + Ruby + PostgreSQL: http://devops.cloudspace.com/images/?prefix=images/ruby-postgresql/
+
+## Building Custom Packer Images
+
+0. Copy this repo into your own project.
+
+1. Set your AWS key/secret as an environment variable
+
+    ```
+    export AWS_ACCESS_KEY_ID="xxxxxxxxx"
+    export AWS_SECRET_ACCESS_KEY="xxxxxxx
+    ```
+
+2. Edit `devops/packer.json` to add any needed config files from `devops/packer-shell-scripts`  (Note: The packer-shell-scripts are a git submodule and will needed to be imported with `git submodule update`.)
+
+
+3. Run the build script in the `devops` directory
+
+    ```
+    packer build packer.json
+    ```
+
+4. Use the sample Vagrantfile to launch the vagrant .box file that was created, open the ovf in Virtualbox, or launch your custom AMI on Amazon using the instructions below.
+
+
 
 # Launching AWS Boxes
 
